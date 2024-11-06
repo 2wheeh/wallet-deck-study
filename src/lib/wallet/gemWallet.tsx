@@ -17,7 +17,7 @@ export class GemWallet implements Wallet {
 
   async connect() {
     if (!(await isInstalledFn())) {
-      return;
+      throw new Error('wallet not installed');
     }
 
     const [addressRes, networkRes] = await Promise.all([getAddress(), getNetwork()]);
