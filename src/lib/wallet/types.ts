@@ -1,3 +1,5 @@
+import { MaybePromise } from '../types';
+
 export interface Wallet {
   address: string | null;
   network: string | null;
@@ -10,4 +12,8 @@ export interface Wallet {
 export interface Payment {
   amount: string;
   destination: string;
+}
+
+export interface ExtensionWallet extends Wallet {
+  isInstalled: () => MaybePromise<boolean>;
 }

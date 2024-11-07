@@ -16,6 +16,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
+    "xumm": "^1.7.7",
+    "xumm-oauth2-pkce": "^2.8.5",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

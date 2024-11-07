@@ -1,12 +1,12 @@
-import { Payment, Wallet } from './types';
+import { ExtensionWallet, Payment } from './types';
 import sdk from '@crossmarkio/sdk';
 
-export class CrossmarkWallet implements Wallet {
+export class CrossmarkWallet implements ExtensionWallet {
   address: string | null = null;
   network: string | null = null;
 
   isInstalled() {
-    return sdk.sync.isInstalled();
+    return !!sdk.sync.isInstalled();
   }
 
   isConnected() {
