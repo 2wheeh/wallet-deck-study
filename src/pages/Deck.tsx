@@ -4,12 +4,14 @@ import { Link } from 'react-router-dom';
 import { GemWallet } from '../lib/wallet/gemWallet';
 import { useWallet } from '../hooks/useWallet';
 import { CrossmarkWallet } from '../lib/wallet/crossmarkWallet';
+import { XamanWallet } from '../lib/wallet/xamanWallet';
 
 export const Deck = () => {
   const { address, network, connect: handleConnect } = useWallet();
 
   const gemWallet = useMemo(() => new GemWallet(), []);
   const crossmarkWallet = useMemo(() => new CrossmarkWallet(), []);
+  const xamanWallet = useMemo(() => new XamanWallet(), []);
 
   return (
     <div>
@@ -26,6 +28,12 @@ export const Deck = () => {
         onClick={() => handleConnect(crossmarkWallet)}
       >
         Connect CrossmarkWallet
+      </button>
+      <button
+        className="border px-2 py-1 rounded-md bg-slate-400"
+        onClick={() => handleConnect(xamanWallet)}
+      >
+        Connect XamanWallet
       </button>
 
       <div>network: {network}</div>
