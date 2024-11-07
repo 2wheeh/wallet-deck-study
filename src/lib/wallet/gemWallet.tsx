@@ -4,9 +4,9 @@ import {
   isInstalled as isInstalledFn,
   sendPayment as sendPaymentFn,
 } from '@gemwallet/api';
-import { Payment, Wallet } from './types';
+import { ExtensionWallet, Payment } from './types';
 
-export class GemWallet implements Wallet {
+export class GemWallet implements ExtensionWallet {
   address: string | null = null;
   network: string | null = null;
 
