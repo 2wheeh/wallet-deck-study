@@ -92,10 +92,10 @@ export class XamanWallet implements Wallet {
         Amount: payment.amount,
       },
       (eventMessage) => {
-        if (Object.keys(eventMessage.data).indexOf('opened') > -1) {
+        if ('opened' in eventMessage.data) {
           // Update the UI? The payload was opened on the Xaman app
         }
-        if (Object.keys(eventMessage.data).indexOf('signed') > -1) {
+        if ('signed' in eventMessage.data) {
           // The `signed` property is present, true (signed) / false (rejected)
           // User signed the payload on the Xaman app
           return eventMessage;
