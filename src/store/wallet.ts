@@ -1,22 +1,23 @@
 import { create } from 'zustand';
 import { Wallet } from '../lib/wallet/types';
 
-interface WalletStore {
-  address: string | null;
-  network: string | null;
+interface Store {
   wallet: Wallet | null;
-
-  setWallet: (wallet: Wallet) => void;
-  setAddress: (address: string) => void;
-  setNetwork: (network: string) => void;
 }
 
-export const walletStore = create<WalletStore>((set) => ({
-  address: null,
-  network: null,
+interface Action {
+  setWallet: (wallet: Wallet) => void;
+  clearWallet: () => void;
+}
+
+type WalletStore = Store & Action;
+
+// not directly use this in components, use useWallet hook instead
+export const useWalletStore = create<WalletStore>((set) => ({
   wallet: null,
 
   setWallet: (wallet) => set({ wallet }),
-  setAddress: (address) => set({ address }),
-  setNetwork: (network) => set({ network }),
+  clearWallet: () => {
+    return set({ wallet: null });
+  },
 }));

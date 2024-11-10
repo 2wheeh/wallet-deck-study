@@ -1,43 +1,30 @@
-import { ExtensionWallet, Payment } from './types';
+import { Action } from '../../store/walletInfo';
+import { ExtensionWallet, Payment, WalletId } from './types';
 import sdk from '@crossmarkio/sdk';
 
 export class CrossmarkWallet implements ExtensionWallet {
-  address: string | null = null;
-  network: string | null = null;
+  id = WalletId.Crossmark;
 
   isInstalled() {
     return !!sdk.sync.isInstalled();
   }
 
   isConnected() {
-    return sdk.sync.isConnected();
+    return !!sdk.methods.isConnected();
   }
 
-  async connect() {
+  async connect(onConnect: Action['setInfo']) {
     if (!this.isInstalled()) {
       throw new Error('wallet not installed');
     }
 
     const { response } = await sdk.methods.signInAndWait();
 
-    this.address = response.data.address;
-    this.network = response.data.network.type;
-  }
-
-  getAddresses() {
-    if (!this.address) {
-      throw new Error('connect wallet first');
-    }
-
-    return this.address;
-  }
-
-  getNetwork() {
-    if (!this.network) {
-      throw new Error('connect wallet first');
-    }
-
-    return this.network;
+    onConnect({
+      address: response.data.address,
+      network: response.data.network.type,
+      walletId: this.id,
+    });
   }
 
   async sendPayment(payment: Payment) {
@@ -45,9 +32,15 @@ export class CrossmarkWallet implements ExtensionWallet {
       throw new Error('wallet not connected');
     }
 
+    const address = sdk.methods.getAddress();
+
+    if (!address) {
+      throw new Error('wallet address not found');
+    }
+
     const { response } = await sdk.methods.signAndSubmitAndWait({
       TransactionType: 'Payment',
-      Account: this.getAddresses(),
+      Account: address,
       Destination: payment.destination,
       Amount: payment.amount,
     });

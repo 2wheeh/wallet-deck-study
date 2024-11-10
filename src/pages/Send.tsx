@@ -1,8 +1,8 @@
 import { FormEvent, useState } from 'react';
-import { useWallet } from '../hooks/useWallet';
+import { useWalletConnection } from '../hooks/useWalletConnection';
 
 export const Send = () => {
-  const { send } = useWallet();
+  const { send } = useWalletConnection();
 
   const [resultHash, setResultHash] = useState<string | null>(null);
 

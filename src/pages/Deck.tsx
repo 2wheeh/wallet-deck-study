@@ -1,43 +1,46 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { GemWallet } from '../lib/wallet/gemWallet';
-import { useWallet } from '../hooks/useWallet';
-import { CrossmarkWallet } from '../lib/wallet/crossmarkWallet';
-import { XamanWallet } from '../lib/wallet/xamanWallet';
+import { useWalletConnection } from '../hooks/useWalletConnection';
+import { useSupportedWallets } from '../hooks/useSupportedWallets';
 
 export const Deck = () => {
-  const { address, network, connect: handleConnect } = useWallet();
-
-  const gemWallet = useMemo(() => new GemWallet(), []);
-  const crossmarkWallet = useMemo(() => new CrossmarkWallet(), []);
-  const xamanWallet = useMemo(() => new XamanWallet(), []);
+  const {
+    currentWalletId,
+    address,
+    network,
+    connect: handleConnect,
+    disconnect,
+  } = useWalletConnection();
+  const wallets = useSupportedWallets();
 
   return (
     <div>
       <div>Home</div>
 
-      <button
-        className="border px-2 py-1 rounded-md bg-slate-400"
-        onClick={() => handleConnect(gemWallet)}
-      >
-        Connect GemWallet
-      </button>
-      <button
-        className="border px-2 py-1 rounded-md bg-slate-400"
-        onClick={() => handleConnect(crossmarkWallet)}
-      >
-        Connect CrossmarkWallet
-      </button>
-      <button
-        className="border px-2 py-1 rounded-md bg-slate-400"
-        onClick={() => handleConnect(xamanWallet)}
-      >
-        Connect XamanWallet
-      </button>
-
-      <div>network: {network}</div>
-      <div>address: {address}</div>
+      {currentWalletId ? (
+        <>
+          <button
+            className="border px-2 py-1 rounded-md bg-slate-400"
+            onClick={() => disconnect().then(() => console.log('disconnected'))}
+          >
+            disconnect {currentWalletId}
+          </button>
+          <div>network: {network}</div>
+          <div>address: {address}</div>
+        </>
+      ) : (
+        <>
+          {wallets.map((wallet) => (
+            <button
+              key={wallet.id}
+              className="border px-2 py-1 rounded-md bg-slate-400"
+              onClick={() => handleConnect(wallet)}
+            >
+              connect {wallet.id}
+            </button>
+          ))}
+        </>
+      )}
 
       {/* this should be fetched from backend or node directly? */}
       <p>Total Balance: {2400129}</p>
