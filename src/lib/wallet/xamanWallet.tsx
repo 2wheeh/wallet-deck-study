@@ -12,13 +12,17 @@ export class XamanWallet implements Wallet {
   #sdk: Xumm | null = null;
 
   async isConnected() {
-    const res = await pkce.state();
+    try {
+      const res = await pkce.state();
 
-    if (res?.jwt) {
-      this.#jwt = res.jwt;
-      this.#sdk = new Xumm(this.#jwt);
+      if (res?.jwt) {
+        this.#jwt = res.jwt;
+        this.#sdk = new Xumm(this.#jwt);
 
-      return true;
+        return true;
+      }
+    } catch {
+      // fail silently - error from the last attempt to pkce.authorize()
     }
 
     return false;
@@ -88,10 +92,10 @@ export class XamanWallet implements Wallet {
         Amount: payment.amount,
       },
       (eventMessage) => {
-        if (Object.keys(eventMessage.data).indexOf('opened') > -1) {
+        if ('opened' in eventMessage.data) {
           // Update the UI? The payload was opened on the Xaman app
         }
-        if (Object.keys(eventMessage.data).indexOf('signed') > -1) {
+        if ('signed' in eventMessage.data) {
           // The `signed` property is present, true (signed) / false (rejected)
           // User signed the payload on the Xaman app
           return eventMessage;
