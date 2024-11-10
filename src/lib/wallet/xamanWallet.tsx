@@ -12,13 +12,17 @@ export class XamanWallet implements Wallet {
   #sdk: Xumm | null = null;
 
   async isConnected() {
-    const res = await pkce.state();
+    try {
+      const res = await pkce.state();
 
-    if (res?.jwt) {
-      this.#jwt = res.jwt;
-      this.#sdk = new Xumm(this.#jwt);
+      if (res?.jwt) {
+        this.#jwt = res.jwt;
+        this.#sdk = new Xumm(this.#jwt);
 
-      return true;
+        return true;
+      }
+    } catch {
+      // fail silently - error from the last attempt to pkce.authorize()
     }
 
     return false;
