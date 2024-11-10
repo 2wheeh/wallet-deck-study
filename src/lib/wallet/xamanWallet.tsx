@@ -1,35 +1,49 @@
 import { XummPkce } from 'xumm-oauth2-pkce';
-import { Payment, Wallet } from './types';
+import { Payment, Wallet, WalletId } from './types';
 import { Xumm } from 'xumm';
+import { Action } from '../../store/walletInfo';
 
-const API_KEY = '0f3b28ed-2ccc-4a8d-bf00-dfddce93ca7b';
+const API_KEY = import.meta.env.VITE_XAMAN_API_KEY as string;
+const pkce = new XummPkce(API_KEY);
 
 export class XamanWallet implements Wallet {
-  address: string | null = null;
-  network: string | null = null;
-  #apiKey: string | null = null;
+  id = WalletId.Xaman;
+  #jwt: string | null = null;
   #sdk: Xumm | null = null;
 
-  async connect() {
-    const pkce = new XummPkce(API_KEY);
+  async isConnected() {
+    const res = await pkce.state();
 
-    try {
-      const res = await pkce.authorize();
+    if (res?.jwt) {
+      this.#jwt = res.jwt;
+      this.#sdk = new Xumm(this.#jwt);
 
-      if (res) {
-        this.#apiKey = res.jwt;
-        // this.address = res.me.account;
-        // this.network = res.me.networkType;
+      return true;
+    }
+
+    return false;
+  }
+
+  async connect(onConnect: Action['setInfo']) {
+    if (!(await this.isConnected())) {
+      try {
+        const res = await pkce.authorize();
+        this.#jwt = res?.jwt ?? null;
+      } catch (error) {
+        console.error('Error pinging Xaman:', error);
       }
-    } catch (error) {
-      console.error('Error pinging Xaman:', error);
+
+      // when user cancels the login
+      if (this.#jwt == null) {
+        return;
+      }
+
+      this.#sdk = new Xumm(this.#jwt);
     }
 
-    if (!this.#apiKey) {
-      return;
+    if (!this.#sdk) {
+      throw new Error('sdk not found');
     }
-
-    this.#sdk = new Xumm(this.#apiKey);
 
     const network = await this.#sdk.user.networkType;
     const address = await this.#sdk.user.account;
@@ -42,24 +56,19 @@ export class XamanWallet implements Wallet {
       throw new Error('address not found');
     }
 
-    this.address = address;
-    this.network = network;
+    onConnect({
+      address,
+      network,
+      walletId: this.id,
+    });
   }
 
-  getAddresses() {
-    if (!this.address) {
-      throw new Error('connect wallet first');
-    }
+  async disconnect() {
+    pkce.logout();
+    await this.#sdk?.logout();
 
-    return this.address;
-  }
-
-  getNetwork() {
-    if (!this.network) {
-      throw new Error('connect wallet first');
-    }
-
-    return this.network;
+    this.#jwt = null;
+    this.#sdk = null;
   }
 
   async sendPayment(payment: Payment) {

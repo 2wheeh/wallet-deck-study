@@ -1,50 +1,56 @@
 import {
   getAddress,
   getNetwork,
+  getPublicKey,
   isInstalled as isInstalledFn,
   sendPayment as sendPaymentFn,
 } from '@gemwallet/api';
-import { ExtensionWallet, Payment } from './types';
+
+import { ExtensionWallet, Payment, WalletId } from './types';
+import { Action as InfoAction } from '../../store/walletInfo';
+
+interface GemWalletInstalled {
+  gemWallet?: NonNullable<unknown>;
+}
 
 export class GemWallet implements ExtensionWallet {
-  address: string | null = null;
-  network: string | null = null;
+  id = WalletId.GemWallet;
 
   async isInstalled() {
     const res = await isInstalledFn();
-    return res.result.isInstalled;
+    return res.result.isInstalled || !!(window as unknown as GemWalletInstalled).gemWallet;
   }
 
-  async connect() {
+  async connect(onConnect: InfoAction['setInfo']) {
     if (!(await isInstalledFn())) {
       throw new Error('wallet not installed');
     }
 
+    const res = await getPublicKey();
+
+    if (res.result == null) {
+      return;
+    }
+
     const [addressRes, networkRes] = await Promise.all([getAddress(), getNetwork()]);
 
-    if (addressRes.result?.address) {
-      this.address = addressRes.result.address;
+    const address = addressRes.result?.address;
+
+    if (address == null) {
+      throw new Error('address not found');
     }
 
-    if (networkRes.result?.network) {
-      this.network = networkRes.result.network;
-    }
-  }
+    const network = networkRes.result?.network;
 
-  getAddresses() {
-    if (!this.address) {
-      throw new Error('connect wallet first');
+    if (network == null) {
+      throw new Error('network not found');
     }
 
-    return this.address;
-  }
-
-  getNetwork() {
-    if (!this.network) {
-      throw new Error('connect wallet first');
-    }
-
-    return this.network;
+    onConnect({
+      address,
+      network,
+      walletId: this.id,
+    });
   }
 
   async sendPayment(payment: Payment) {

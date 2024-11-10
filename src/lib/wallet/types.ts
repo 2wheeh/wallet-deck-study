@@ -1,11 +1,17 @@
-import { MaybePromise } from '../types';
+import type { Action as InfoAction } from '../../store/walletInfo';
+import type { MaybePromise } from '../types';
+
+export enum WalletId {
+  GemWallet = 'gem-wallet',
+  Crossmark = 'crossmark',
+  Xaman = 'xaman',
+}
 
 export interface Wallet {
-  address: string | null;
-  network: string | null;
-  connect: () => Promise<void>;
-  getAddresses: () => string;
-  getNetwork: () => string;
+  id: WalletId;
+  connect: (onConnect: InfoAction['setInfo']) => Promise<void>;
+  isConnected?: () => MaybePromise<boolean>;
+  disconnect?: () => MaybePromise<void>;
   sendPayment: (payment: Payment) => Promise<string>;
 }
 
