@@ -14,7 +14,7 @@ interface GemWalletInstalled {
 }
 
 export class GemWallet implements ExtensionWallet {
-  id = WalletId.GemWallet;
+  readonly id = WalletId.GemWallet;
 
   async isInstalled() {
     const res = await isInstalledFn();

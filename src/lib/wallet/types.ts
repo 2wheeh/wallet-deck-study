@@ -8,7 +8,7 @@ export enum WalletId {
 }
 
 export interface Wallet {
-  id: WalletId;
+  readonly id: WalletId;
   connect: (onConnect: InfoAction['setInfo']) => Promise<void>;
   isConnected?: () => MaybePromise<boolean>;
   disconnect?: () => MaybePromise<void>;

@@ -5,7 +5,7 @@ import { Action } from '../../store/walletInfo';
 
 const API_KEY = import.meta.env.VITE_XAMAN_API_KEY as string;
 export class XamanWallet implements Wallet {
-  id = WalletId.Xaman;
+  readonly id = WalletId.Xaman;
   static readonly CONNECTION_TIMEOUT = 60 * 1000; // 60s timeout
 
   #pkce: XummPkce;
