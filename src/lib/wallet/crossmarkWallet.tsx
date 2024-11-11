@@ -2,15 +2,19 @@ import { Action } from '../../store/walletInfo';
 import { ExtensionWallet, Payment, WalletId } from './types';
 import sdk from '@crossmarkio/sdk';
 
+interface CrossmarkWalletInstalled {
+  crossmark?: NonNullable<unknown>;
+}
+
 export class CrossmarkWallet implements ExtensionWallet {
   id = WalletId.Crossmark;
 
   isInstalled() {
-    return !!sdk.sync.isInstalled();
+    return sdk.sync.isInstalled() ?? !!(window as unknown as CrossmarkWalletInstalled).crossmark;
   }
 
-  isConnected() {
-    return !!sdk.methods.isConnected();
+  async isConnected() {
+    return await sdk.methods.connect(60 * 1000); // 60s
   }
 
   async connect(onConnect: Action['setInfo']) {
@@ -28,14 +32,10 @@ export class CrossmarkWallet implements ExtensionWallet {
   }
 
   async sendPayment(payment: Payment) {
-    if (!this.isConnected()) {
-      throw new Error('wallet not connected');
-    }
-
     const address = sdk.methods.getAddress();
 
     if (!address) {
-      throw new Error('wallet address not found');
+      throw new Error('wallet not connected');
     }
 
     const { response } = await sdk.methods.signAndSubmitAndWait({

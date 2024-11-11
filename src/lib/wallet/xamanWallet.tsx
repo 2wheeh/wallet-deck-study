@@ -4,46 +4,77 @@ import { Xumm } from 'xumm';
 import { Action } from '../../store/walletInfo';
 
 const API_KEY = import.meta.env.VITE_XAMAN_API_KEY as string;
-const pkce = new XummPkce(API_KEY);
-
 export class XamanWallet implements Wallet {
   id = WalletId.Xaman;
+  static readonly CONNECTION_TIMEOUT = 60 * 1000; // 60s timeout
+
+  #pkce: XummPkce;
   #jwt: string | null = null;
   #sdk: Xumm | null = null;
 
-  async isConnected() {
+  constructor() {
+    this.#pkce = new XummPkce(API_KEY);
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners() {
+    this.#pkce.on('error', (error) => {
+      console.error('PKCE error:', error);
+    });
+
+    this.#pkce.on('loggedout', () => {
+      this.#jwt = null;
+      this.#sdk = null;
+    });
+  }
+
+  private async checkConnection() {
     try {
-      const res = await pkce.state();
-
-      if (res?.jwt) {
-        this.#jwt = res.jwt;
-        this.#sdk = new Xumm(this.#jwt);
-
-        return true;
+      const res = await this.#pkce.state();
+      if (res?.jwt == null) {
+        return false;
       }
+
+      this.#jwt = res.jwt;
+      this.#sdk = new Xumm(this.#jwt);
+
+      return true;
     } catch {
       // fail silently - error from the last attempt to pkce.authorize()
+      return false;
     }
+  }
 
-    return false;
+  async isConnected() {
+    return new Promise<boolean>((resolve) => {
+      const onRetrieved = () => {
+        this.#pkce.off('retrieved', onRetrieved);
+        this.checkConnection().then(resolve);
+      };
+
+      this.#pkce.on('retrieved', onRetrieved);
+
+      setTimeout(() => {
+        this.#pkce.off('retrieved', onRetrieved);
+        this.checkConnection().then(resolve);
+      }, XamanWallet.CONNECTION_TIMEOUT); // 60s timeout
+    });
   }
 
   async connect(onConnect: Action['setInfo']) {
-    if (!(await this.isConnected())) {
-      try {
-        const res = await pkce.authorize();
-        this.#jwt = res?.jwt ?? null;
-      } catch (error) {
-        console.error('Error pinging Xaman:', error);
-      }
-
-      // when user cancels the login
-      if (this.#jwt == null) {
-        return;
-      }
-
-      this.#sdk = new Xumm(this.#jwt);
+    try {
+      const res = await this.#pkce.authorize();
+      this.#jwt = res?.jwt ?? null;
+    } catch (error) {
+      console.error('Error pinging Xaman:', error);
     }
+
+    // when user cancels the login
+    if (this.#jwt == null) {
+      return;
+    }
+
+    this.#sdk = new Xumm(this.#jwt);
 
     if (!this.#sdk) {
       throw new Error('sdk not found');
@@ -68,7 +99,7 @@ export class XamanWallet implements Wallet {
   }
 
   async disconnect() {
-    pkce.logout();
+    this.#pkce.logout();
     await this.#sdk?.logout();
 
     this.#jwt = null;
