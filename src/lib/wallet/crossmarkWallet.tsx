@@ -7,7 +7,7 @@ interface CrossmarkWalletInstalled {
 }
 
 export class CrossmarkWallet implements ExtensionWallet {
-  id = WalletId.Crossmark;
+  readonly id = WalletId.Crossmark;
 
   isInstalled() {
     return sdk.sync.isInstalled() ?? !!(window as unknown as CrossmarkWalletInstalled).crossmark;
