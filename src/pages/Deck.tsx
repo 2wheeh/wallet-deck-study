@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useWalletConnection } from '../hooks/useWalletConnection';
 import { useSupportedWallets } from '../hooks/useSupportedWallets';
+import { useXrpl } from '../hooks/useXrpl';
 
 export const Deck = () => {
   const {
@@ -12,6 +14,22 @@ export const Deck = () => {
     disconnect,
   } = useWalletConnection();
   const wallets = useSupportedWallets();
+
+  const { getAllBalances: getXrplBalances, isConnected: isXrplConnected } = useXrpl();
+  const [balance, setBalance] = useState<number>();
+
+  useEffect(() => {
+    if (address == null || isXrplConnected === false) {
+      return;
+    }
+
+    const fetchBalances = async () => {
+      const balances = await getXrplBalances(address);
+      setBalance(balances.xrp.balance);
+    };
+
+    fetchBalances();
+  }, [getXrplBalances, address, isXrplConnected]);
 
   return (
     <div>
@@ -25,6 +43,7 @@ export const Deck = () => {
           >
             disconnect {currentWalletId}
           </button>
+
           <div>network: {network}</div>
           <div>address: {address}</div>
         </>
@@ -43,7 +62,7 @@ export const Deck = () => {
       )}
 
       {/* this should be fetched from backend or node directly? */}
-      <p>Total Balance: {2400129}</p>
+      <p>Total Balance: {balance}</p>
 
       <div className="flex flex-col w-fit">
         <Link className="border px-2 py-1 rounded-md bg-slate-400" to="/receive">

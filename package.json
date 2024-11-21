@@ -13,9 +13,13 @@
   "dependencies": {
     "@crossmarkio/sdk": "^0.4.0",
     "@gemwallet/api": "^3.8.0",
+    "@walletconnect/modal-sign-react": "^2.7.0",
+    "@walletconnect/sign-client": "^2.17.2",
+    "@walletconnect/utils": "^2.17.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
+    "xrpl": "^4.0.0",
     "xumm": "^1.7.7",
     "xumm-oauth2-pkce": "^2.8.7",
     "zustand": "^5.0.1"

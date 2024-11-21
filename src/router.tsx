@@ -1,6 +1,8 @@
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import { Deck } from './pages/Deck';
 import { Send } from './pages/Send';
+import { Receive } from './pages/Receive';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +19,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'receive',
-        element: <div>Receive</div>,
+        element: (
+          <ProtectedRoute>
+            <Receive />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'send',
